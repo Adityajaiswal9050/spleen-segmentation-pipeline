@@ -1,0 +1,5 @@
+{
+  "version": "1.0.2",
+  "best_dice": 0.4603,
+  "versioned_checkpoint": "checkpoints/spleen_model_v1.0.0.pth"
+}

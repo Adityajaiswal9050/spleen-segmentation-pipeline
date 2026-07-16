@@ -1,0 +1,6 @@
+data/
+checkpoints/
+monai-env/
+*.log
+__pycache__/
+*.pyc
