@@ -1,0 +1,15 @@
+Exporting to ONNX...
+Saved checkpoints/spleen_model.onnx
+Max abs diff between PyTorch and ONNX Runtime output: 6.20e-06
+
+=== Latency on a single (64, 64, 64) patch, CPU, 20 runs ===
+PyTorch:      316.0 ms +/- 82.7 ms  (3.16 inferences/sec)
+ONNX Runtime: 68.6 ms +/- 4.6 ms  (14.57 inferences/sec)
+ONNX Runtime speedup: 4.61x
+
+=== Compared to the real Phase 4 ROS2 pipeline ===
+Camera publish rate (measured, image_publisher.py's 1.0s timer): 1.00 Hz (one frame every 1.00s)
+PyTorch single-patch inference:      0.316s -- keeps up with the camera rate
+ONNX Runtime single-patch inference: 0.069s -- keeps up with the camera rate
+
+Note: this is a single 64^3 patch, not the sliding-window inference over a full CT volume that evaluate_spleen.py runs (which takes several seconds per full case -- see the API benchmark). The segmentation_bridge_node.py ROS2 node also does one patch-sized forward pass per camera frame, so this number is the actually relevant one for that node's per-frame latency budget, not the full-volume evaluation latency.
