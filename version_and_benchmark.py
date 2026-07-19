@@ -5,6 +5,7 @@ import shutil
 
 STATE_FILE = "version_state.json"
 LOG_FILE = "benchmark_log.csv"
+VERSION_HISTORY_FILE = "version_history.csv"
 CHECKPOINT_DIR = "checkpoints"
 LATEST_CHECKPOINT = os.path.join(CHECKPOINT_DIR, "best_spleen_model.pth")
 
@@ -22,6 +23,18 @@ def load_state():
 def save_state(state):
     with open(STATE_FILE, "w") as f:
         json.dump(state, f, indent=2)
+
+
+def log_version_history(timestamp, version, dice):
+    """Append one real (timestamp, version, dice) row -- ground truth for the
+    Phase 6 Dice-vs-version chart, recorded at the moment a version is actually
+    assigned rather than reconstructed after the fact."""
+    file_exists = os.path.isfile(VERSION_HISTORY_FILE)
+    with open(VERSION_HISTORY_FILE, "a", newline="") as f:
+        writer = csv.writer(f)
+        if not file_exists:
+            writer.writerow(["timestamp", "version", "mean_dice"])
+        writer.writerow([timestamp, version, f"{dice:.4f}"])
 
 
 def bump_version(version, part):
@@ -85,6 +98,7 @@ def main():
               f"Patch version bumped to {new_version}.")
 
     save_state(state)
+    log_version_history(timestamp, state["version"], current_dice)
     print(f"Current tracked version: {state['version']} (best Dice: {state['best_dice']:.4f})")
 
 
