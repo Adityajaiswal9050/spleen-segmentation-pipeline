@@ -3,3 +3,4 @@ timestamp,checkpoint,num_val_cases,mean_dice
 2026-07-16T21:56:47,checkpoints/best_spleen_model.pth,8,0.4603
 2026-07-16T22:00:19,checkpoints/best_spleen_model.pth,8,0.4603
 2026-07-16T22:14:48,checkpoints/best_spleen_model.pth,8,0.4603
+2026-07-19T19:23:51,experiments/gpu_run_100ep/checkpoints/best_spleen_model.pth,8,0.2127
