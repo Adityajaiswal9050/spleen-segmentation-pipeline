@@ -20,7 +20,7 @@
 # WHY THIS SCRIPT EXISTS: Tier 3 item 16 asks for a genuine multi-GPU
 # torch.distributed demo, not a claim of DDP without evidence. This trains
 # the SAME architecture as the CPU baseline (4-level UNet, 64^3 patches,
-# 2.5/2.5/3.0mm spacing, same lr/augmentation as train_spleen.py) so the
+# 2.5/2.5/3.0mm spacing, same lr/augmentation as src/train_spleen.py) so the
 # resulting Dice is at least comparable in kind to 0.4603, but the actual
 # point being demonstrated is the distributed mechanics: DistributedSampler
 # splitting data across ranks, DDP-wrapped gradient sync, and both GPUs
@@ -54,7 +54,7 @@ from monai.transforms import (
 )
 
 ROOT_DIR = "./data"
-PATCH_SIZE = (64, 64, 64)   # same as train_spleen.py -- this is a distributed
+PATCH_SIZE = (64, 64, 64)   # same as src/train_spleen.py -- this is a distributed
                             # mechanics demo, not a new best-model attempt
 NUM_EPOCHS = 30
 MASTER_ADDR = "127.0.0.1"
@@ -211,7 +211,7 @@ if __name__ == "__main__":
     print(f"Total wall-clock time: {return_dict['total_time']:.0f}s")
     print(f"Best validation Dice (rank 0): {return_dict['best_dice']:.4f}")
     print(
-        "(Same architecture/recipe as train_spleen.py's 0.4603 CPU run -- "
+        "(Same architecture/recipe as src/train_spleen.py's 0.4603 CPU run -- "
         "this number is a byproduct of proving the distributed training "
         "mechanics work for real, not a new best-model claim.)"
     )

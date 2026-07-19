@@ -3,4 +3,4 @@ WORKDIR /app
 RUN pip install --no-cache-dir torch --index-url https://download.pytorch.org/whl/cpu
 RUN pip install --no-cache-dir monai nibabel numpy fastapi uvicorn python-multipart matplotlib
 EXPOSE 8000
-CMD ["uvicorn", "serve_api:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["uvicorn", "serve_api:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]

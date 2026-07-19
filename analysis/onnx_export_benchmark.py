@@ -92,7 +92,7 @@ print(f"ONNX Runtime single-patch inference: {onnx_mean:.3f}s -- "
       f"{'keeps up with' if onnx_mean < 1/ROS2_PUBLISH_RATE_HZ else 'falls behind'} the camera rate")
 print(
     "\nNote: this is a single 64^3 patch, not the sliding-window inference over a full CT "
-    "volume that evaluate_spleen.py runs (which takes several seconds per full case -- see "
+    "volume that src/evaluate_spleen.py runs (which takes several seconds per full case -- see "
     "the API benchmark). The segmentation_bridge_node.py ROS2 node also does one patch-sized "
     "forward pass per camera frame, so this number is the actually relevant one for that node's "
     "per-frame latency budget, not the full-volume evaluation latency."

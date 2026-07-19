@@ -3,8 +3,8 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-VERSION_HISTORY_FILE = "version_history.csv"
-OUT_FILE = "dice_vs_version.png"
+VERSION_HISTORY_FILE = "results/version_history.csv"
+OUT_FILE = "results/dice_vs_version.png"
 
 
 def load_history():
@@ -15,7 +15,7 @@ def load_history():
 def main():
     rows = load_history()
     if not rows:
-        print(f"No rows in {VERSION_HISTORY_FILE} yet -- run version_and_benchmark.py first.")
+        print(f"No rows in {VERSION_HISTORY_FILE} yet -- run scripts/version_and_benchmark.py first.")
         return
 
     versions = [r["version"] for r in rows]
@@ -34,9 +34,9 @@ def main():
     plt.savefig(OUT_FILE, dpi=150)
     print(f"Saved {OUT_FILE} ({len(rows)} tracked version(s): {versions[0]} -> {versions[-1]})")
     if len(rows) == 1:
-        print("Note: version_history.csv tracking started at 1.0.2 -- the earlier 1.0.0 -> 1.0.1 "
+        print("Note: results/version_history.csv tracking started at 1.0.2 -- the earlier 1.0.0 -> 1.0.1 "
               "transitions happened before per-run version history was recorded, so their exact "
-              "timestamps aren't available. Future runs of version_and_benchmark.py will append here.")
+              "timestamps aren't available. Future runs of scripts/version_and_benchmark.py will append here.")
 
 
 if __name__ == "__main__":

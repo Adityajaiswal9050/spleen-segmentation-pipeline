@@ -13,6 +13,7 @@ def isolated_workdir(tmp_path, monkeypatch):
     touch the real benchmark_log.csv / version_state.json / checkpoints."""
     monkeypatch.chdir(tmp_path)
     os.makedirs("checkpoints", exist_ok=True)
+    os.makedirs("results", exist_ok=True)
     # a tiny fake "checkpoint" file -- content doesn't matter, only that it exists
     with open(os.path.join("checkpoints", "best_spleen_model.pth"), "wb") as f:
         f.write(b"fake-weights")

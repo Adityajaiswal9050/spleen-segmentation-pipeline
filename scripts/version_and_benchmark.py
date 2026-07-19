@@ -4,8 +4,8 @@ import os
 import shutil
 
 STATE_FILE = "version_state.json"
-LOG_FILE = "benchmark_log.csv"
-VERSION_HISTORY_FILE = "version_history.csv"
+LOG_FILE = "results/benchmark_log.csv"
+VERSION_HISTORY_FILE = "results/version_history.csv"
 CHECKPOINT_DIR = "checkpoints"
 LATEST_CHECKPOINT = os.path.join(CHECKPOINT_DIR, "best_spleen_model.pth")
 
@@ -49,7 +49,7 @@ def bump_version(version, part):
 
 def get_latest_dice():
     if not os.path.isfile(LOG_FILE):
-        raise FileNotFoundError(f"{LOG_FILE} not found -- run evaluate_spleen.py first.")
+        raise FileNotFoundError(f"{LOG_FILE} not found -- run src/evaluate_spleen.py first.")
     with open(LOG_FILE) as f:
         rows = list(csv.DictReader(f))
     if not rows:

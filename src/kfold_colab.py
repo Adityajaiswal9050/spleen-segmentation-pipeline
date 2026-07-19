@@ -16,7 +16,7 @@
 # corners -- 15 epochs/fold instead of the production run's 50 -- because 3x
 # full training runs on this VM's CPU would take hours and previously caused
 # a hard reset. This script keeps the exact same architecture, patch size,
-# spacing, and hyperparameters as train_spleen.py (the CPU baseline that
+# spacing, and hyperparameters as src/train_spleen.py (the CPU baseline that
 # scored val Dice 0.4603) and just moves execution to GPU so each fold can
 # run the FULL 50 epochs. The question being answered: was 0.4603 a lucky
 # train/val split, or representative of what this architecture/recipe can
@@ -53,14 +53,14 @@ print(f"Device: {DEVICE}")
 assert DEVICE.type == "cuda", "No GPU detected -- go to Runtime > Change runtime type > T4 GPU"
 
 ROOT_DIR = "./data"
-PATCH_SIZE = (64, 64, 64)     # same as train_spleen.py -- this is a robustness
+PATCH_SIZE = (64, 64, 64)     # same as src/train_spleen.py -- this is a robustness
                               # check on the existing recipe, not a new one
 K_FOLDS = 3
-NUM_EPOCHS = 50               # full budget, same as train_spleen.py (CPU
+NUM_EPOCHS = 50               # full budget, same as src/train_spleen.py (CPU
                               # k-fold had to cut this to 15 for time)
 
 # ---- Pull all 41 labeled cases (train+val sections combined) via the
-# Decathlon downloader, same source train_spleen.py and the CPU k-fold used ----
+# Decathlon downloader, same source src/train_spleen.py and the CPU k-fold used ----
 print("Downloading/loading Decathlon Task09_Spleen (first run only, ~1.5GB)...")
 full_train_ds_raw = DecathlonDataset(
     root_dir=ROOT_DIR, task="Task09_Spleen", section="training",
@@ -116,7 +116,7 @@ for fold_idx in range(K_FOLDS):
     train_loader = DataLoader(train_ds, batch_size=1, shuffle=True, num_workers=2)
     val_loader = DataLoader(val_ds, batch_size=1, shuffle=False, num_workers=2)
 
-    # Same architecture as train_spleen.py / checkpoints/best_spleen_model.pth
+    # Same architecture as src/train_spleen.py / checkpoints/best_spleen_model.pth
     model = UNet(
         spatial_dims=3, in_channels=1, out_channels=2,
         channels=(16, 32, 64, 128), strides=(2, 2, 2), num_res_units=2,
@@ -173,7 +173,7 @@ std_dice_all = float(np.std(fold_results))
 print(f"Mean across folds: {mean_dice_all:.4f}")
 print(f"Std across folds:  {std_dice_all:.4f}")
 print(
-    f"\n(Full 50-epoch budget per fold, matching train_spleen.py exactly. "
+    f"\n(Full 50-epoch budget per fold, matching src/train_spleen.py exactly. "
     f"Compare against the production checkpoint's single-split 0.4603 -- "
     f"this shows whether that number was representative or a lucky split.)"
 )

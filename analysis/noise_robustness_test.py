@@ -75,7 +75,7 @@ for noise_std in NOISE_STD_LEVELS:
 
 baseline_dice = results[0][1]
 print(f"\nBaseline (no noise) Dice: {baseline_dice:.4f} "
-      f"(matches evaluate_spleen.py's reported 0.4603: {'yes' if abs(baseline_dice - 0.4603) < 0.01 else 'NO -- investigate'})")
+      f"(matches src/evaluate_spleen.py's reported 0.4603: {'yes' if abs(baseline_dice - 0.4603) < 0.01 else 'NO -- investigate'})")
 
 noise_levels = [r[0] for r in results]
 dices = [r[1] for r in results]
@@ -90,5 +90,5 @@ plt.ylim(0, max(dices) * 1.2)
 for x, y in zip(noise_levels, dices):
     plt.annotate(f"{y:.3f}", (x, y), textcoords="offset points", xytext=(0, 8), ha="center", fontsize=9)
 plt.tight_layout()
-plt.savefig("noise_robustness.png", dpi=150)
-print("Saved noise_robustness.png")
+plt.savefig("results/noise_robustness.png", dpi=150)
+print("Saved results/noise_robustness.png")

@@ -1,3 +1,18 @@
+"""Monte Carlo dropout uncertainty quantification.
+
+HONEST CAVEAT (do not remove): checkpoints/best_spleen_model.pth was trained
+with dropout=0.0 (see src/train_spleen.py) -- the original training run used no
+dropout at all. Dropout has no learned parameters, so here we load the same
+trained weights into a UNet built with dropout=0.2 and enable dropout only at
+inference time ("test-time dropout injection"). This is a real, commonly used
+post-hoc technique for retrofitting MC-dropout uncertainty onto an already
+-trained deterministic model -- but it means the stochasticity comes from a
+randomly-initialized-at-inference dropout mask, not from anything the network
+learned to be robust to during training. Treat the resulting confidence maps
+as a genuine but weaker uncertainty signal than a model trained with dropout
+from scratch would give.
+"""
+
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
@@ -15,7 +30,9 @@ DEVICE = torch.device("cpu")
 ROOT_DIR = "./data"
 PATCH_SIZE = (64, 64, 64)
 CHECKPOINT_PATH = "checkpoints/best_spleen_model.pth"
-CASE_INDICES = [0, 1, 2]  # first few validation cases
+INFERENCE_DROPOUT = 0.2
+NUM_MC_PASSES = 20
+CASE_INDICES = [0, 1, 2]
 
 val_transforms = Compose([
     LoadImaged(keys=["image", "label"]),
@@ -35,32 +52,19 @@ val_ds = DecathlonDataset(
 model = UNet(
     spatial_dims=3, in_channels=1, out_channels=2,
     channels=(16, 32, 64, 128), strides=(2, 2, 2), num_res_units=2,
+    dropout=INFERENCE_DROPOUT,
 ).to(DEVICE)
 model.load_state_dict(torch.load(CHECKPOINT_PATH, map_location=DEVICE))
-model.eval()
-
-# Bottleneck ResidualUnit -- deepest, most downsampled feature map (128ch).
-target_layer = model.model[1].submodule[1].submodule[1].submodule.conv.unit1
-
-_activations = {}
-_gradients = {}
+model.eval()  # everything (InstanceNorm, etc.) stays in eval mode...
 
 
-def _forward_hook(module, inp, out):
-    _activations["value"] = out.detach()
-
-
-def _backward_hook(module, grad_input, grad_output):
-    _gradients["value"] = grad_output[0].detach()
-
-
-target_layer.register_forward_hook(_forward_hook)
-target_layer.register_full_backward_hook(_backward_hook)
+def enable_dropout_only(m):
+    for module in m.modules():
+        if isinstance(module, torch.nn.Dropout):
+            module.train()
 
 
 def extract_patch_around_label(image, label, patch_size):
-    """Crop a fixed-size patch centered on the labeled spleen voxels (falls
-    back to the volume center if the label is empty in this crop)."""
     fg = (label[0] > 0).nonzero(as_tuple=False)
     if fg.numel() == 0:
         center = [s // 2 for s in label.shape[1:]]
@@ -79,44 +83,35 @@ def extract_patch_around_label(image, label, patch_size):
     lbl_patch = label[:, starts[0]:ends[0], starts[1]:ends[1], starts[2]:ends[2]]
 
     if any(p > 0 for p in pads):
-        pad_spec = (0, pads[2], 0, pads[1], 0, pads[0])  # F.pad is reverse-dim order
+        pad_spec = (0, pads[2], 0, pads[1], 0, pads[0])
         img_patch = F.pad(img_patch, pad_spec)
         lbl_patch = F.pad(lbl_patch, pad_spec)
 
     return img_patch, lbl_patch
 
 
-def compute_gradcam(img_patch):
-    input_tensor = img_patch.unsqueeze(0).clone().to(DEVICE)
-    input_tensor.requires_grad_(True)
-
-    output = model(input_tensor)  # (1, 2, D, H, W)
-    foreground_score = output[:, 1].sum()  # target: total foreground evidence
-    model.zero_grad()
-    foreground_score.backward()
-
-    acts = _activations["value"][0]   # (C, d, h, w)
-    grads = _gradients["value"][0]    # (C, d, h, w)
-    weights = grads.mean(dim=(1, 2, 3))  # global-average-pooled gradients, per MONAI Seg-Grad-CAM convention
-
-    cam = torch.einsum("c,cdhw->dhw", weights, acts)
-    cam = F.relu(cam)
-    cam = cam / (cam.max() + 1e-8)
-
-    cam_up = F.interpolate(cam[None, None], size=PATCH_SIZE, mode="trilinear", align_corners=False)[0, 0]
-    return cam_up.detach(), output.detach()
-
-
 for case_idx in CASE_INDICES:
     data = val_ds[case_idx]
     image, label = data["image"], data["label"]
-
     img_patch, lbl_patch = extract_patch_around_label(image, label, PATCH_SIZE)
-    cam, output = compute_gradcam(img_patch)
-    pred = torch.argmax(output, dim=1)[0]
+    input_tensor = img_patch.unsqueeze(0).to(DEVICE)
+
+    enable_dropout_only(model)  # ...except Dropout, turned on for this loop
+    probs = []
+    with torch.no_grad():
+        for _ in range(NUM_MC_PASSES):
+            output = model(input_tensor)
+            prob_fg = torch.softmax(output, dim=1)[0, 1]  # foreground probability
+            probs.append(prob_fg)
+    model.eval()  # back to fully deterministic afterward
+
+    probs = torch.stack(probs)  # (T, D, H, W)
+    mean_prob = probs.mean(dim=0)
+    std_prob = probs.std(dim=0)
+    mean_pred = (mean_prob > 0.5).float()
 
     mid = PATCH_SIZE[2] // 2
-    fig, axes = plt.subplots(1, 3, figsize=(13, 4.5))
+    fig, axes = plt.subplots(1, 4, figsize=(17, 4.5))
 
     axes[0].imshow(img_patch[0, :, :, mid].numpy(), cmap="gray")
     axes[0].set_title("CT slice")
@@ -124,18 +119,25 @@ for case_idx in CASE_INDICES:
 
     axes[1].imshow(img_patch[0, :, :, mid].numpy(), cmap="gray")
     axes[1].imshow(lbl_patch[0, :, :, mid].numpy(), cmap="Reds", alpha=0.4)
-    pred_slice = pred[:, :, mid].numpy()
-    axes[1].contour(pred_slice, colors="cyan", linewidths=1)
-    axes[1].set_title("Ground truth (red) vs. prediction (cyan outline)")
+    axes[1].contour(mean_pred[:, :, mid].numpy(), colors="cyan", linewidths=1)
+    axes[1].set_title("Ground truth (red) vs. MC mean prediction (cyan)")
     axes[1].axis("off")
 
-    axes[2].imshow(img_patch[0, :, :, mid].numpy(), cmap="gray")
-    axes[2].imshow(cam[:, :, mid].numpy(), cmap="jet", alpha=0.5)
-    axes[2].set_title("Grad-CAM (bottleneck layer)")
+    axes[2].imshow(mean_prob[:, :, mid].numpy(), cmap="viridis", vmin=0, vmax=1)
+    axes[2].set_title(f"Mean foreground probability ({NUM_MC_PASSES} passes)")
     axes[2].axis("off")
 
+    im = axes[3].imshow(std_prob[:, :, mid].numpy(), cmap="magma")
+    axes[3].set_title("Uncertainty (std across passes)")
+    axes[3].axis("off")
+    fig.colorbar(im, ax=axes[3], fraction=0.046)
+
     plt.tight_layout()
-    out_path = f"gradcam_case{case_idx + 1}.png"
+    out_path = f"results/mc_dropout_case{case_idx + 1}.png"
     plt.savefig(out_path, dpi=150)
     plt.close(fig)
-    print(f"Saved {out_path}")
+
+    boundary_std = std_prob[(mean_prob > 0.1) & (mean_prob < 0.9)].mean().item() if ((mean_prob > 0.1) & (mean_prob < 0.9)).any() else 0.0
+    confident_std = std_prob[(mean_prob <= 0.1) | (mean_prob >= 0.9)].mean().item()
+    print(f"case {case_idx + 1}: mean uncertainty at boundary={boundary_std:.4f}, "
+          f"in confident regions={confident_std:.4f} -- saved {out_path}")

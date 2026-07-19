@@ -17,7 +17,7 @@ DEVICE = torch.device("cpu")
 ROOT_DIR = "./data"
 PATCH_SIZE = (64, 64, 64)
 CHECKPOINT_PATH = "checkpoints/best_spleen_model.pth"
-LOG_FILE = "benchmark_log.csv"
+LOG_FILE = "results/benchmark_log.csv"
 
 val_transforms = Compose([
     LoadImaged(keys=["image", "label"]),

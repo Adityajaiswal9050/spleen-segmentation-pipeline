@@ -22,7 +22,7 @@ from monai.transforms import (
 )
 
 CHECKPOINT_PATH = os.environ.get("CHECKPOINT_PATH", "checkpoints/best_spleen_model.pth")
-PATCH_SIZE = (64, 64, 64)  # must match train_spleen.py / evaluate_spleen.py
+PATCH_SIZE = (64, 64, 64)  # must match src/train_spleen.py / src/evaluate_spleen.py
 DEVICE = torch.device("cpu")
 
 # Real per-case intensity stats measured over the 33 training cases (post

@@ -1,7 +1,7 @@
 import torch
 from monai.networks.nets import UNet
 
-# Same architecture as train_spleen.py / evaluate_spleen.py -- kept in sync manually
+# Same architecture as src/train_spleen.py / src/evaluate_spleen.py -- kept in sync manually
 # since there's no shared model-definition module (yet).
 IN_CHANNELS = 1
 OUT_CHANNELS = 2

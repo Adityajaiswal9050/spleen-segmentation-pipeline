@@ -2,21 +2,21 @@
 
 Real measured result: **val Dice 0.2127**, confirmed by directly re-running
 evaluation against this checkpoint. That is *worse* than the existing CPU
-baseline (0.4603, see `../../FAILURE_ANALYSIS.md`). Per the honesty rule this
+baseline (0.4603, see `../../docs/FAILURE_ANALYSIS.md`). Per the honesty rule this
 project runs on, the baseline checkpoint (`checkpoints/best_spleen_model.pth`)
 has **not** been replaced — this run is documented as a failure, not shipped.
 
 ## Confirming the number
 
-`evaluate_spleen.py` is hardcoded for the CPU baseline's architecture
+`src/evaluate_spleen.py` is hardcoded for the CPU baseline's architecture
 (4-level UNet, 64³ patches, 2.5/2.5/3.0mm spacing) and fails with a
 `state_dict` size mismatch against this checkpoint. This run actually used
-the 5-level UNet from `train_spleen_colab.py` (channels
+the 5-level UNet from `src/train_spleen_colab.py` (channels
 16/32/64/128/256, 96³ patches, 1.5/1.5/2.0mm spacing). `evaluate_gpu_run.py`
 in this folder is a copy of the eval script pointed at the correct
 architecture/spacing for this checkpoint; running it reproduces **0.2127**
 exactly, matching the "best" value logged at epoch 90 in `training_log.csv`.
-The result is appended to the repo's `benchmark_log.csv`.
+The result is appended to the repo's `results/benchmark_log.csv`.
 
 ## What the curve actually shows
 
@@ -32,7 +32,7 @@ like a slow, still-not-fully-converged climb that was cut off.
 
 ## The real, verified cause: the run stopped at 1/3 of its planned LR schedule
 
-`train_spleen_colab.py` configures `CosineAnnealingLR` with
+`src/train_spleen_colab.py` configures `CosineAnnealingLR` with
 `T_max=NUM_EPOCHS=300` — the whole schedule assumes 300 epochs. This run
 (folder name `gpu_run_100ep`, confirmed by `training_log.csv` having exactly
 100 rows) only completed 100. At epoch 100, cosine annealing has decayed the

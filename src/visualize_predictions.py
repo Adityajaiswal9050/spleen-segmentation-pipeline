@@ -79,7 +79,7 @@ with torch.no_grad():
         axes[2].set_title("Model prediction")
         axes[2].axis("off")
 
-        out_path = f"prediction_case{case_idx+1}.png"
+        out_path = f"results/prediction_case{case_idx+1}.png"
         plt.tight_layout()
         plt.savefig(out_path, dpi=120)
         plt.close(fig)

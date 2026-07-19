@@ -14,15 +14,15 @@ from monai.transforms import (
 )
 
 # Run from the repo root: python experiments/gpu_run_100ep/evaluate_gpu_run.py
-# NOTE: unlike evaluate_spleen.py, this checkpoint used the 5-level UNet /
-# 96^3 patches / 1.5,1.5,2.0mm spacing from train_spleen_colab.py, not the
+# NOTE: unlike src/evaluate_spleen.py, this checkpoint used the 5-level UNet /
+# 96^3 patches / 1.5,1.5,2.0mm spacing from src/train_spleen_colab.py, not the
 # CPU baseline's 4-level / 64^3 / 2.5,2.5,3.0mm config. Loading it with the
 # baseline architecture fails with a state_dict size mismatch.
 DEVICE = torch.device("cpu")
 ROOT_DIR = "./data"
 PATCH_SIZE = (96, 96, 96)
 CHECKPOINT_PATH = "experiments/gpu_run_100ep/checkpoints/best_spleen_model.pth"
-LOG_FILE = "benchmark_log.csv"
+LOG_FILE = "results/benchmark_log.csv"
 
 val_transforms = Compose([
     LoadImaged(keys=["image", "label"]),

@@ -87,7 +87,7 @@ for r in results[:NUM_WORST_TO_VISUALIZE]:
 
 all_dice = [r["dice"] for r in results]
 print(f"\nRecomputed per-case mean Dice: {np.mean(all_dice):.4f} "
-      f"(evaluate_spleen.py's aggregate metric over the same 8 cases: 0.4603)")
+      f"(src/evaluate_spleen.py's aggregate metric over the same 8 cases: 0.4603)")
 
 for r in results[:NUM_WORST_TO_VISUALIZE]:
     i = r["index"]
@@ -118,7 +118,7 @@ for r in results[:NUM_WORST_TO_VISUALIZE]:
     axes[2].axis("off")
 
     plt.tight_layout()
-    out_path = f"failure_case_{i}.png"
+    out_path = f"results/failure_case_{i}.png"
     plt.savefig(out_path, dpi=150)
     plt.close(fig)
     print(f"Saved {out_path}")
