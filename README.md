@@ -61,7 +61,7 @@ flowchart TB
 | K-fold cross-validation (`src/kfold_colab.py`) | Mean ± std Dice, 3 folds | **Pending** — script written, not yet run (needs Colab GPU) |
 | ONNX export (`analysis/onnx_export_benchmark.py`) | Latency, single 64³ patch | PyTorch 316ms vs. ONNX Runtime 68.6ms (**4.61x**), both under the ROS2 node's 1.0Hz budget |
 | CI (`tests/test_version_and_benchmark.py` + `tests/test_model_inference.py`) | Tests passing | **8/8**, real inference smoke test included, not just versioning arithmetic |
-| Semantic versioning | Current version | `1.0.2` (see `results/dice_vs_version.png`) |
+| Semantic versioning | Current version | `1.0.3` (see `results/dice_vs_version.png`) |
 | Distributed training demo (`src/train_spleen_ddp_kaggle.py`) | Real 2-GPU DDP run | **Pending** — script written, not yet run (needs Kaggle dual-T4) |
 | Cloud deployment | Public endpoint | **Not attempted** — deliberately deferred, not claimed |
 
