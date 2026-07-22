@@ -201,6 +201,7 @@ if __name__ == "__main__":
         "Settings > Accelerator > GPU T4 x2 and restart the session."
     )
 
+    os.makedirs(ROOT_DIR, exist_ok=True)  # create once here, not once per spawned rank
     manager = mp.Manager()
     return_dict = manager.dict()
     mp.spawn(run_worker, args=(world_size, return_dict), nprocs=world_size, join=True)

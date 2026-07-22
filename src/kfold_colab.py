@@ -62,6 +62,7 @@ NUM_EPOCHS = 50               # full budget, same as src/train_spleen.py (CPU
 # ---- Pull all 41 labeled cases (train+val sections combined) via the
 # Decathlon downloader, same source src/train_spleen.py and the CPU k-fold used ----
 print("Downloading/loading Decathlon Task09_Spleen (first run only, ~1.5GB)...")
+os.makedirs(ROOT_DIR, exist_ok=True)
 full_train_ds_raw = DecathlonDataset(
     root_dir=ROOT_DIR, task="Task09_Spleen", section="training",
     transform=None, download=True, cache_rate=0.0, num_workers=0,
