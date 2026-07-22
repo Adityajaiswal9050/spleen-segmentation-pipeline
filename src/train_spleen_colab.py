@@ -96,6 +96,7 @@ val_transforms = Compose([
 ])
 
 print("Downloading/loading Decathlon Task09_Spleen (first run only, ~1.5GB)...")
+os.makedirs(ROOT_DIR, exist_ok=True)
 train_ds = DecathlonDataset(
     root_dir=ROOT_DIR, task="Task09_Spleen", section="training",
     transform=train_transforms, download=True, cache_rate=0.5, num_workers=2,
